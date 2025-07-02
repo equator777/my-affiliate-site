@@ -1,63 +1,48 @@
-// src/pages/index.js
 import { useState, useEffect } from 'react';
+import Head from 'next/head';
 
 export default function Home() {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
 
   useEffect(() => {
-    const fetchProducts = async () => {
-      try {
-        const response = await fetch('/api/products');
-        if (!response.ok) throw new Error('API request failed');
-        const data = await response.json();
-        setProducts(data);
-      } catch (err) {
-        setError(err.message);
-      } finally {
+    fetch('/api/products')
+      .then(res => res.json())
+      .then(data => {
+        setProducts(data.filter(p => p.url.includes('http')));
         setLoading(false);
-      }
-    };
-
-    fetchProducts();
+      });
   }, []);
 
-  if (loading) return <div>Loading...</div>;
-  if (error) return <div>Error: {error}</div>;
+  if (loading) return <div className="loading">Loading products...</div>;
 
   return (
-    <div style={{ padding: '20px' }}>
-      <h1>Affiliate Products</h1>
-      <div style={{ 
-        display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))',
-        gap: '20px'
-      }}>
-        {products.map(product => (
-          <div key={product.url} style={{
-            border: '1px solid #ddd',
-            padding: '15px',
-            borderRadius: '8px'
-          }}>
+    <div className="container">
+      <Head>
+        <title>Affiliate Products</title>
+      </Head>
+
+      <h1>Featured Products</h1>
+      
+      <div className="product-grid">
+        {products.map((product) => (
+          <a 
+            href={product.url} 
+            key={product.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="product-card"
+          >
+            <img 
+              src={product.image} 
+              alt={product.name}
+              onError={(e) => e.target.src = '/placeholder-product.png'}
+              className="product-image"
+            />
             <h3>{product.name}</h3>
-            <p>Price: {product.price}</p>
-            <a 
-              href={product.url} 
-              target="_blank"
-              rel="noopener noreferrer"
-              style={{
-                display: 'inline-block',
-                padding: '8px 16px',
-                background: '#0070f3',
-                color: 'white',
-                borderRadius: '4px',
-                textDecoration: 'none'
-              }}
-            >
-              Buy Now
-            </a>
-          </div>
+            <p>{product.price}</p>
+            <button>Buy Now</button>
+          </a>
         ))}
       </div>
     </div>
