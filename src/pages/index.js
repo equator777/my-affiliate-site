@@ -1,27 +1,37 @@
-import { useEffect, useState } from 'react';
+import { useState, useEffect } from 'react';
 import Head from 'next/head';
 
 export default function Home() {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
-    async function loadProducts() {
+    const fetchProducts = async () => {
       try {
         const response = await fetch('/api/products');
+        if (!response.ok) {
+          throw new Error('Failed to fetch products');
+        }
         const data = await response.json();
         setProducts(data);
-      } catch (error) {
-        console.error("Failed to load products:", error);
+      } catch (err) {
+        setError(err.message);
       } finally {
         setLoading(false);
       }
-    }
-    loadProducts();
+    };
+
+    fetchProducts();
   }, []);
 
-  if (loading) return <div className="loading">Loading products...</div>;
-  if (!products.length) return <div className="error">No products available</div>;
+  if (loading) {
+    return <div className="loading">Loading products...</div>;
+  }
+
+  if (error) {
+    return <div className="error">Error: {error}</div>;
+  }
 
   return (
     <div className="container">
@@ -37,9 +47,9 @@ export default function Home() {
           <div key={product.name} className="product-card">
             <h3>{product.name}</h3>
             <p>Price: {product.price}</p>
-            <a 
-              href={product.url} 
-              target="_blank" 
+            <a
+              href={product.url}
+              target="_blank"
               rel="noopener noreferrer"
               className="buy-button"
             >
