@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react';
-import Head from 'next/head';
 
 export default function Home() {
   const [products, setProducts] = useState([]);
@@ -7,52 +6,42 @@ export default function Home() {
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    const fetchProducts = async () => {
+    const fetchData = async () => {
       try {
+        console.log('Fetching products from API...');
         const response = await fetch('/api/products');
+        
         if (!response.ok) {
-          throw new Error('Failed to fetch products');
+          throw new Error(`HTTP error! status: ${response.status}`);
         }
+        
         const data = await response.json();
+        console.log('Received products:', data.length);
         setProducts(data);
       } catch (err) {
+        console.error('Fetch error:', err);
         setError(err.message);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchProducts();
+    fetchData();
   }, []);
 
-  if (loading) {
-    return <div className="loading">Loading products...</div>;
-  }
-
-  if (error) {
-    return <div className="error">Error: {error}</div>;
-  }
+  if (loading) return <div>Loading products...</div>;
+  if (error) return <div>Error: {error}</div>;
+  if (!products.length) return <div>No products found</div>;
 
   return (
-    <div className="container">
-      <Head>
-        <title>Affiliate Products</title>
-        <meta name="description" content="Best affiliate deals" />
-      </Head>
-
-      <h1>Featured Products</h1>
-      
-      <div className="product-grid">
-        {products.map((product) => (
-          <div key={product.name} className="product-card">
-            <h3>{product.name}</h3>
-            <p>Price: {product.price}</p>
-            <a
-              href={product.url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="buy-button"
-            >
+    <div>
+      <h1>Products</h1>
+      <div>
+        {products.map(product => (
+          <div key={product.url}>
+            <h2>{product.name}</h2>
+            <p>{product.price}</p>
+            <a href={product.url} target="_blank" rel="noopener">
               Buy Now
             </a>
           </div>
